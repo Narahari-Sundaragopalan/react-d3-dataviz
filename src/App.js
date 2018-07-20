@@ -1,25 +1,29 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import logo from './logo.svg';
 import './App.css';
 import Graph from './components/Graph';
-import axios from 'axios';
 
 class App extends Component {
+  constructor(props) {
+    super(props)
+  }
 
   componentDidMount() {
-    const dataUrl = 'https://storage.googleapis.com/armorblox-public/small.json';
+    //const dataUrl = 'https://storage.googleapis.com/armorblox-public/small.json';
 
-    axios.get(dataUrl).then(res => {
-      const data = res;
+    // axios.get(dataUrl).then(res => {
+    //   this.setState({ data: res.data});
+    //   console.log(this.props.data);
 
-    })
+    // });
   }
 
   render() {
     return (
       <div className="App">
         <header className="App-header">
-          <h1 className="App-title">Welcome to React</h1>
+          <h1 className="App-title">Email Data Visualization using D3 JS </h1>
         </header>
         <Graph />
       </div>

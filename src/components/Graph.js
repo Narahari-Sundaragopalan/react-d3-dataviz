@@ -1,16 +1,29 @@
 import React, { Component } from 'react';
 import * as d3 from 'd3';
+import axios from 'axios';
+import './Graph.css';
 
 
 
 class Graph extends Component {
   constructor(props) {
     super(props);
+
+    // this.state = {
+    //   data : {},
+    // }
   }
 
   componentDidMount() {
-    const width = 640;
-    const height = 480;
+
+    const dataUrl = 'https://raw.githubusercontent.com/DealPete/forceDirected/master/countries.json';
+
+    axios.get(dataUrl).then(res => {
+      const data = res.data;
+      console.log(data);
+
+      const width = 640;
+      const height = 480;
 
     // Initializing the graph
     const graph = d3.select('.graph')
@@ -49,12 +62,67 @@ class Graph extends Component {
           d.fx = null;
           d.fy = null;
         }
+
+        // Creating links
+        const link = graph.append('g')
+          .attr('class', 'links')
+          .selectAll('line')
+          .data(data.links).enter()
+          .append('line');
+
+           // const node = d3.select('.graph-container')
+        //   .selectAll('div')
+        // Creating nodes
+        const node = graph.append('g')
+          .attr('class', 'nodes')
+          .selectAll('circle')
+          .data(data.nodes).enter()
+          .append('circle')
+          .attr('r', 4)
+          .attr('cx', d => { return d.x; })
+          .attr('cy', d => { return d.y; })
+          .call(d3.drag()
+           .on('start', dragStart)
+           .on('drag', drag)
+           .on('end', dragEnd)
+        ).on('mouseover',d => {
+          tooltip.html(d.country)
+            .style('left', d3.event.pageX + 5 +'px')
+            .style('top', d3.event.pageY + 5 + 'px')
+            .style('opacity', .9);
+        }).on('mouseout', () => {
+          tooltip.style('opacity', 0)
+            .style('left', '0px')
+            .style('top', '0px');
+        });
+
+         //Setting location when ticked
+      const ticked = () => {
+        link
+          .attr("x1", d => { return d.source.x; })
+          .attr("y1", d => { return d.source.y; })
+          .attr("x2", d => { return d.target.x; })
+          .attr("y2", d => { return d.target.y; });
+
+      node
+          .attr("style", d => {
+            return 'left: ' + d.x + 'px; top: ' + (d.y + 72) + 'px'; 
+          });
+      };
+      
+      //Starting simulation
+      simulation.nodes(data.nodes)
+        .on('tick', ticked);
+      
+      simulation.force('link')
+        .links(data.links);
+
+    });
   }
 
   render() {
     return (
       <div className="container">
-        <h1>Data Visualization using D3 JS </h1>
         <div className="graph-container">
           <svg className="graph">
           </svg>

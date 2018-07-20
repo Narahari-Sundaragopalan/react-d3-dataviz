@@ -1,0 +1,22 @@
+body {
+  font-family: sans-serif;
+}
+
+.links line {
+  stroke: grey;
+}
+
+.tooltip {
+  position: absolute;
+  background-color: lightgray;
+  padding: 10px;
+}
+
+.node {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+
+.node .selected {
+  stroke: black;
+}
