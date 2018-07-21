@@ -1,135 +1,127 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
 import * as d3 from 'd3';
 import axios from 'axios';
 import './Graph.css';
+import Node from './Node';
+import Link from './Link';
+
+const width = 1080;
+const height = 250;
+const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+const enterNode = (selection) => {
+  selection.select('circle')
+      .attr("r", 30)
+      .style("fill", function(d) { return color(d.name) })
 
 
+  selection.select('text')
+      .attr("dy", ".35em")
+      .style("transform", "translateX(-50%,-50%")
+};
+
+const updateNode = (selection) => {
+  selection.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")")
+
+};
+
+const enterLink = (selection) => {
+  selection.attr("stroke-width", 2)
+  .style("stroke","black")
+      .style("opacity",".2")
+};
+
+
+const updateLink = (selection) => {
+  selection
+      .attr("x1", (d) => d.source.x)
+      .attr("y1", (d) => d.source.y)
+      .attr("x2", (d) => d.target.x)
+      .attr("y2", (d) => d.target.y);
+};
+
+const updateGraph = (selection) => {
+  selection.selectAll('.link')
+      .call(updateLink);
+};
 
 class Graph extends Component {
-  constructor(props) {
+  constructor(props){
     super(props);
-
-    // this.state = {
-    //   data : {},
-    // }
   }
 
   componentDidMount() {
+    this.d3Graph = d3.select(ReactDOM.findDOMNode(this));
+    
+    var force = d3.forceSimulation(this.props.data.nodes)
+      .force("charge", d3.forceManyBody().strength(-50))
+      .force("link", d3.forceLink(this.props.data.links).distance(90))
+      .force("center", d3.forceCenter().x(width / 2).y(height / 2))
+      .force("collide", d3.forceCollide([5]).iterations([5]))
 
-    const dataUrl = 'https://raw.githubusercontent.com/DealPete/forceDirected/master/countries.json';
+    function dragStarted(d) {
+        if (!d3.event.active) force.alphaTarget(0.3).restart()
+        d.fx = d.x
+        d.fy = d.y
 
-    axios.get(dataUrl).then(res => {
-      const data = res.data;
-      console.log(data);
+    }
 
-      const width = 640;
-      const height = 480;
+    function dragging(d) {
+        d.fx = d3.event.x
+        d.fy = d3.event.y
+    }
 
-    // Initializing the graph
-    const graph = d3.select('.graph')
-      .attr('width', width)
-      .attr('height', height);
+    function dragEnded(d) {
+        if (!d3.event.active) force.alphaTarget(0)
+        d.fx = null
+        d.fy = null
+    }
 
-      // Creating tooltip
-      const tooltip = d3.select('.container')
-        .append('div')
-        .attr('class', 'tooltip')
-        .html('Tooltip');
-
-        // Initializing force simulation
-        const simulation = d3.forceSimulation()
-          .force('link', d3.forceLink())
-          .force('charge', d3.forceManyBody())
-          .force('collide', d3.forceCollide())
-          .force('center', d3.forceCenter(width / 2, height / 2))
-          .force('y', d3.forceY(0))
-          .force('x', d3.forceX(0));
-
-        //Drag functions
-        const dragStart = d => {
-          if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-          d.fx = d.x;
-          d.fy = d.y;
-        };
-
-        const drag = d => {
-          d.fx = d3.event.x;
-          d.fy = d3.event.y;
-        };
-
-        const dragEnd = d => {
-          if (!d3.event.active) simulation.alphaTarget(0);
-          d.fx = null;
-          d.fy = null;
-        }
-
-        // Creating links
-        const link = graph.append('g')
-          .attr('class', 'links')
-          .selectAll('line')
-          .data(data.links).enter()
-          .append('line');
-
-           // const node = d3.select('.graph-container')
-        //   .selectAll('div')
-        // Creating nodes
-        const node = graph.append('g')
-          .attr('class', 'nodes')
-          .selectAll('circle')
-          .data(data.nodes).enter()
-          .append('circle')
-          .attr('r', 4)
-          .attr('cx', d => { return d.x; })
-          .attr('cy', d => { return d.y; })
-          .call(d3.drag()
-           .on('start', dragStart)
-           .on('drag', drag)
-           .on('end', dragEnd)
-        ).on('mouseover',d => {
-          tooltip.html(d.country)
-            .style('left', d3.event.pageX + 5 +'px')
-            .style('top', d3.event.pageY + 5 + 'px')
-            .style('opacity', .9);
-        }).on('mouseout', () => {
-          tooltip.style('opacity', 0)
-            .style('left', '0px')
-            .style('top', '0px');
-        });
-
-         //Setting location when ticked
-      const ticked = () => {
-        link
-          .attr("x1", d => { return d.source.x; })
-          .attr("y1", d => { return d.source.y; })
-          .attr("x2", d => { return d.target.x; })
-          .attr("y2", d => { return d.target.y; });
-
-      node
-          .attr("style", d => {
-            return 'left: ' + d.x + 'px; top: ' + (d.y + 72) + 'px'; 
-          });
-      };
-      
-      //Starting simulation
-      simulation.nodes(data.nodes)
-        .on('tick', ticked);
-      
-      simulation.force('link')
-        .links(data.links);
-
-    });
+    const node = d3.selectAll('g.node')
+      .call(d3.drag()
+                .on("start", dragStarted)
+                .on("drag", dragging)
+                .on("end", dragEnded)
+           );
+    
+      force.on('tick', () => {
+          this.d3Graph.call(updateGraph)
+      });
   }
 
   render() {
-    return (
-      <div className="container">
-        <div className="graph-container">
-          <svg className="graph">
+      var nodes = this.props.data.nodes.map( (node) => {
+          return (
+          <Node
+              data={node}
+              name={node.name}
+              key={node.id}
+              enterNode={enterNode}
+              updateNode={updateNode}
+          />);
+      });
+      var links = this.props.data.links.map( (link,i) => {
+          return (
+              <Link
+                  key={link.target+i}
+                  data={link}
+                  enterLink={enterLink}
+                  updateLink={updateLink}
+              />);
+      });
+      return (
+          <svg className="graph" width={width} height={height}>
+              <g>
+                  {nodes}
+              </g>
+              <g>
+                  {links}
+              </g>
           </svg>
-        </div>
-      </div>
-    );
+      );
   }
 }
+
 
 export default Graph;
