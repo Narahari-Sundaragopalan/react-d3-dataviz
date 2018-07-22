@@ -3,3 +3,14 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+.container {
+  display: flex;
+  padding-top: 1em;
+  justify-content: center;
+  align-items: center;
+}
+
+.column {
+  flex-direction: column;
+}
