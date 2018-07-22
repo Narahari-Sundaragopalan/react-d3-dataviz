@@ -4,6 +4,8 @@ import * as d3 from 'd3';
 import ReactDOM from 'react-dom';
 import logo from './logo.svg';
 import './App.css';
+import * as d3Functions from './components/D3Functions';
+import axios from 'axios';
 //import Graph from './components/Graph';
 
 
@@ -73,6 +75,17 @@ class App extends React.Component {
       }
     }
   }
+
+  componentDidMount() {
+    const dataUrl = 'https://storage.googleapis.com/armorblox-public/small.json';
+
+    axios.get(dataUrl).then(res => {
+      const data = res;
+      // Get formatted data with nodes and links
+      //d3Functions.parseData(data);
+      //this.setState({data: data});
+      });
+    }
   
   render() {
     return (

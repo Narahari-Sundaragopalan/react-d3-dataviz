@@ -69,3 +69,23 @@ const updateGraph = (selection) => {
     selection.selectAll('.link')
         .call(updateLink);
 };
+
+
+// Function to parse data from the API
+const parseData = (data) => {
+  const nodes = [];
+  for (let email of data) {
+    const currentNode = {};
+    for (let element of email.message.split(/\n/g)) {
+      if (element.includes("X-To:")) {
+        currentNode['email'] = element;
+        nodes.push(currentNode);
+     	} else if (element.includes("X-From:")) {
+        currentNode['email'] = element;
+        nodes.push(currentNode);
+     	}
+    }
+  }
+
+  return nodes;
+};
