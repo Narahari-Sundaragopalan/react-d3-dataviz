@@ -1,11 +1,14 @@
 import auth0 from 'auth0-js';
+
 import history from './history';
 
 export default class Auth {
+  // Please use your own credentials here
   auth0 = new auth0.WebAuth({
     domain: 'react-d3.auth0.com',
     clientID: 'UaqIHCSU29iEOMyrwMGXIY6Fgw-yCTzr',
     redirectUri: process.env.NODE_ENV === 'development' ? 'http://localhost:3000/callback' : '',
+    responseType: 'token id_token',
     scope: 'openid'
   });
 
